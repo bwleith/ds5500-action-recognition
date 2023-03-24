@@ -22,12 +22,13 @@ img = []
 for i in range(len(train_csv)):
     im = train_path + train_csv['filename'].iloc[i]
     temp = Image.open(im)
-    img.append(np.array(temp.resize((200,200))))
-    
-labels = to_categorical(np.asarray(train_csv['label'].factorize()[0]))
+    img.append(np.array(temp.resize((200,200))) / 255.0)
+
+labels = to_categorical(np.asarray(train_csv['label'].factorize()[0]), num_classes=15)
+
 images = np.asarray(img)
 
-x_train, x_test, y_train, y_test = train_test_split(images, labels, test_size=0.10, random_state=29, stratify=labels)
+x_train, x_test, y_train, y_test = train_test_split(images, labels, test_size=0.20, random_state=29, stratify=labels)
 
 del images, labels
 
@@ -38,17 +39,16 @@ data_augmentation = keras.Sequential(
 )
 
 #low risk goal: feedforward network
-model = tf.keras.Sequential([
-    tf.keras.layers.Flatten(input_shape=(200, 200,3)),
-    tf.keras.layers.Dense(512, activation='sigmoid'),
-    tf.keras.layers.Dense(256, activation='sigmoid'),
-    tf.keras.layers.Dense(128, activation='sigmoid'),
-    tf.keras.layers.Dense(64, activation='sigmoid'),
-    tf.keras.layers.Dense(15, activation='softmax')
+model = keras.Sequential([
+    keras.layers.Flatten(input_shape=(200, 200,3)),
+    keras.layers.Dense(512, activation='relu'),
+    keras.layers.Dense(256, activation='relu'),
+    keras.layers.Dense(15, activation='softmax')
 ])
 
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-history = model.fit(x_train, y_train, batch_size=32, epochs=25, validation_data=(x_test, y_test))
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+history = model.fit(x_train, y_train, batch_size=32, epochs=10, validation_data=(x_test, y_test))
 
 fig = plt.figure(figsize=(15,4))
 
@@ -69,21 +69,60 @@ plt.xlabel('Epoch Number')
 plt.ylabel('Loss')
 plt.show()
 
-# pretrained = tf.keras.applications.VGG16(input_shape=(200,200,3), 
+#medium risk goal: CNN
+
+model = keras.Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(200, 200, 3)),
+    MaxPooling2D((2, 2)),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Conv2D(128, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.2),
+    Dense(15, activation='softmax')
+])
+
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+history = model.fit(x_train, y_train, batch_size=32, epochs=50, validation_data=(x_test, y_test))
+
+fig = plt.figure(figsize=(15,4))
+
+fig.add_subplot(121)
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.legend(['Training accuracy', 'Validation accuracy'])
+plt.title('Training and validation accuracy')
+plt.xlabel('Epoch Number')
+plt.ylabel('Accuracy')
+
+fig.add_subplot(122)
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.legend(['Training loss', 'Validation loss'])
+plt.title('Training and validation loss')
+plt.xlabel('Epoch Number')
+plt.ylabel('Loss')
+plt.show()
+
+#high risk goal: pretrained networks
+# pretrained = keras.applications.VGG16(input_shape=(200,200,3), 
 #                                          include_top=False, 
 #                                          weights='imagenet',
 #                                          pooling='avg')
 
 # trying resnet50
 
-# pretrained = tf.keras.applications.ResNet50(input_shape=(200,200,3),
+# pretrained = keras.applications.ResNet50(input_shape=(200,200,3),
 #                                             include_top=False,
 #                                             weights='imagenet',
 #                                             pooling='avg')
 
 # trying xception
 
-# pretrained = tf.keras.applications.Xception(input_shape=(200,200,3),
+# pretrained = keras.applications.Xception(input_shape=(200,200,3),
 #                                             include_top=False,
 #                                             weights='imagenet',
 #                                             pooling='avg')
@@ -91,21 +130,21 @@ plt.show()
 
 # trying efficientnetb4
 
-# pretrained = tf.keras.applications.EfficientNetB4(input_shape=(200,200,3),
+# pretrained = keras.applications.EfficientNetB4(input_shape=(200,200,3),
 #                                                   include_top=False,
 #                                                   weights='imagenet',
 #                                                   pooling='avg')
 
 # trying efficientnetv2m
 
-# pretrained = tf.keras.applications.EfficientNetV2M(input_shape=(200,200,3),
+# pretrained = keras.applications.EfficientNetV2M(input_shape=(200,200,3),
 #                                                    include_top=False,
 #                                                    weights='imagenet',
 #                                                    pooling='avg')
 
 # trying convnextlarge
 
-# pretrained = tf.keras.applications.ConvNeXtLarge(input_shape=(200,200,3),
+# pretrained = keras.applications.ConvNeXtLarge(input_shape=(200,200,3),
 #                                                  include_top=False,
 #                                                  weights='imagenet',
 #                                                  pooling='avg')
@@ -115,7 +154,7 @@ plt.show()
 # inputs = keras.Input(shape=(200,200,3))
 # # x = data_augmentation(inputs) # uncomment this and comment the next line to use data augmentation
 # x = inputs
-# # x = tf.keras.applications.xception.preprocess_input(x) # for input scaling, not for all models
+# # x = keras.applications.xception.preprocess_input(x) # for input scaling, not for all models
 # x = pretrained(x, training=False)
 # x = keras.layers.Flatten()(x)
 # # to do: try batch normalization
