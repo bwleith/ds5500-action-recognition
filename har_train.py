@@ -14,8 +14,8 @@ from PIL import Image
 # To do: add argparse
 
 
-train_csv = pd.read_csv('/home/sharma.kin/capstone2/Human Action Recognition/Training_set.csv')
-train_path = '/home/sharma.kin/capstone2/Human Action Recognition/train/'
+train_csv = pd.read_csv('./Training_set.csv')
+train_path = './train/'
 
 img = []
 
@@ -36,6 +36,38 @@ data_augmentation = keras.Sequential(
      layers.RandomZoom(0.2), layers.RandomContrast(0.1), 
      layers.RandomTranslation(0.1, 0.1),] 
 )
+
+#low risk goal: feedforward network
+model = tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape=(200, 200,3)),
+    tf.keras.layers.Dense(512, activation='sigmoid'),
+    tf.keras.layers.Dense(256, activation='sigmoid'),
+    tf.keras.layers.Dense(128, activation='sigmoid'),
+    tf.keras.layers.Dense(64, activation='sigmoid'),
+    tf.keras.layers.Dense(15, activation='softmax')
+])
+
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+history = model.fit(x_train, y_train, batch_size=32, epochs=25, validation_data=(x_test, y_test))
+
+fig = plt.figure(figsize=(15,4))
+
+fig.add_subplot(121)
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.legend(['Training accuracy', 'Validation accuracy'])
+plt.title('Training and validation accuracy')
+plt.xlabel('Epoch Number')
+plt.ylabel('Accuracy')
+
+fig.add_subplot(122)
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.legend(['Training loss', 'Validation loss'])
+plt.title('Training and validation loss')
+plt.xlabel('Epoch Number')
+plt.ylabel('Loss')
+plt.show()
 
 # pretrained = tf.keras.applications.VGG16(input_shape=(200,200,3), 
 #                                          include_top=False, 
@@ -73,47 +105,47 @@ data_augmentation = keras.Sequential(
 
 # trying convnextlarge
 
-pretrained = tf.keras.applications.ConvNeXtLarge(input_shape=(200,200,3),
-                                                 include_top=False,
-                                                 weights='imagenet',
-                                                 pooling='avg')
+# pretrained = tf.keras.applications.ConvNeXtLarge(input_shape=(200,200,3),
+#                                                  include_top=False,
+#                                                  weights='imagenet',
+#                                                  pooling='avg')
 
-pretrained.trainable = False
+# pretrained.trainable = False
 
-inputs = keras.Input(shape=(200,200,3))
-# x = data_augmentation(inputs) # uncomment this and comment the next line to use data augmentation
-x = inputs
-# x = tf.keras.applications.xception.preprocess_input(x) # for input scaling, not for all models
-x = pretrained(x, training=False)
-x = keras.layers.Flatten()(x)
-# to do: try batch normalization
-x = keras.layers.Dense(512, activation='relu')(x)
-x = keras.layers.Dropout(0.2, seed=29)(x)
-outputs = keras.layers.Dense(15, activation='softmax')(x)
-model = keras.Model(inputs, outputs)
+# inputs = keras.Input(shape=(200,200,3))
+# # x = data_augmentation(inputs) # uncomment this and comment the next line to use data augmentation
+# x = inputs
+# # x = tf.keras.applications.xception.preprocess_input(x) # for input scaling, not for all models
+# x = pretrained(x, training=False)
+# x = keras.layers.Flatten()(x)
+# # to do: try batch normalization
+# x = keras.layers.Dense(512, activation='relu')(x)
+# x = keras.layers.Dropout(0.2, seed=29)(x)
+# outputs = keras.layers.Dense(15, activation='softmax')(x)
+# model = keras.Model(inputs, outputs)
 
-model.compile(
-    optimizer=keras.optimizers.Adam(),
-    loss=keras.losses.CategoricalCrossentropy(),
-    metrics=[keras.metrics.CategoricalAccuracy()],
-)
+# model.compile(
+#     optimizer=keras.optimizers.Adam(),
+#     loss=keras.losses.CategoricalCrossentropy(),
+#     metrics=[keras.metrics.CategoricalAccuracy()],
+# )
 
-hist = model.fit(x_train, y_train, batch_size=32, epochs=20, validation_data=(x_test, y_test))
+# hist = model.fit(x_train, y_train, batch_size=32, epochs=20, validation_data=(x_test, y_test))
 
 
-# Fine-tuning
+# # Fine-tuning
 
-pretrained.trainable = True
+# pretrained.trainable = True
 
-model.compile(
-    optimizer=keras.optimizers.Adam(1e-5),
-    loss=keras.losses.CategoricalCrossentropy(),
-    metrics=[keras.metrics.CategoricalAccuracy()],
-)
+# model.compile(
+#     optimizer=keras.optimizers.Adam(1e-5),
+#     loss=keras.losses.CategoricalCrossentropy(),
+#     metrics=[keras.metrics.CategoricalAccuracy()],
+# )
 
-epochs = 5
+# epochs = 5
 
-model.fit(x_train, y_train, batch_size=32, epochs=epochs, validation_data=(x_test, y_test))
+# model.fit(x_train, y_train, batch_size=32, epochs=epochs, validation_data=(x_test, y_test))
 
 
 # To do: save model
