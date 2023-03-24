@@ -1,0 +1,8 @@
+# ignore large output files produced by the training program
+models/*
+visualizations/*
+
+# ignore training and test data
+train/*
+test/*
+*.csv
