@@ -99,27 +99,27 @@ def train_model(model_config: str,
                                                 weights='imagenet',
                                                 pooling='avg')
     elif model_config == 'ResNet50':
-        pretrained = tf.keras.applications.VGG16(input_shape=(200,200,3), 
+        pretrained = tf.keras.applications.ResNet50(input_shape=(200,200,3), 
                                                 include_top=False, 
                                                 weights='imagenet',
                                                 pooling='avg')
     elif model_config == 'Xception':
-        pretrained = tf.keras.applications.VGG16(input_shape=(200,200,3), 
+        pretrained = tf.keras.applications.Xception(input_shape=(200,200,3), 
                                                 include_top=False, 
                                                 weights='imagenet',
                                                 pooling='avg')
     elif model_config == 'EfficientNetB4':
-        pretrained = tf.keras.applications.VGG16(input_shape=(200,200,3), 
+        pretrained = tf.keras.applications.EfficientNetB4(input_shape=(200,200,3), 
                                                 include_top=False, 
                                                 weights='imagenet',
                                                 pooling='avg')
     elif model_config == 'EfficientNetV2M':
-        pretrained = tf.keras.applications.VGG16(input_shape=(200,200,3), 
+        pretrained = tf.keras.applications.EfficientNetV2M(input_shape=(200,200,3), 
                                                 include_top=False, 
                                                 weights='imagenet',
                                                 pooling='avg')
     elif model_config == 'ConvNeXtLarge':
-        pretrained = tf.keras.applications.VGG16(input_shape=(200,200,3), 
+        pretrained = tf.keras.applications.ConvNeXtLarge(input_shape=(200,200,3), 
                                                 include_top=False, 
                                                 weights='imagenet',
                                                 pooling='avg')
