@@ -51,6 +51,7 @@ def train_model(model_config: str,
                 y_train: np.ndarray, 
                 x_test: np.ndarray, 
                 y_test: np.ndarray, 
+                augment: bool = False,
                 batch_size: int = 32, 
                 epochs: int = 5, 
                 random_seed: int = 42) -> Tuple[tf.keras.Model, 
@@ -152,11 +153,24 @@ def train_model(model_config: str,
         return model, hist1, hist2
     else:
         raise Exception('Invalid model configuration')
+    
+    # pretrained layers
+
+
+    # data augmentation (to be used if applicable)
+    data_augmentation = tf.keras.Sequential(
+        [tf.keras.layers.RandomFlip("horizontal"), tf.keras.layers.RandomRotation(0.2),
+        tf.keras.layers.RandomZoom(0.2), tf.keras.layers.RandomContrast(0.1), 
+        tf.keras.layers.RandomTranslation(0.1, 0.1),]
+    )
 
     # note: this will only run if you are fine-tuning one of the pretrained networks
     pretrained.trainable = False
     inputs = tf.keras.Input(shape=(200,200,3))
-    x = inputs
+    if augment:
+        x = data_augmentation(inputs)
+    else:
+        x = inputs
     x = pretrained(x, training=False)
     x = tf.keras.layers.Flatten()(x)
     x = tf.keras.layers.Dense(512, activation='relu')(x)
