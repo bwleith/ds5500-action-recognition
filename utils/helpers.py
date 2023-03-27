@@ -235,6 +235,14 @@ def train_model(model_config: str,
                     tf.keras.layers. Dropout(0.2),
                     tf.keras.layers. Dense(15, activation='softmax')
         ])
+
+        model.summary()
+
+        hist1 = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test))
+
+        hist2 = hist1
+
+        return model, hist1, hist2
         
     elif model_config == 'ViT':
         model = create_vit_classifier()
