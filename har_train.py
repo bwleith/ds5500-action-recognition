@@ -11,12 +11,14 @@ parser.add_argument("--model_config", help = "model configuration", type = str, 
 parser.add_argument("--epochs", help = "number of epochs", type = int, default = 10)
 parser.add_argument("--batch_size", help = "batch size", type = int, default = 128)
 parser.add_argument("--augment", help = "data augmentation", type=bool, default = False)
+parser.add_argument("--regularization", help = "regularization", type=bool, default=False)
 args = parser.parse_args()
 
 model_config = args.model_config
 epochs = args.epochs
 batch_size = args.batch_size
 augment = args.augment
+regularization = args.regularization
 
 # read in the data
 train_df = pd.read_csv('./Training_set.csv')
@@ -33,7 +35,8 @@ model, hist1, hist2 = utils.helpers.train_model(model_config,
                                                 y_test, 
                                                 augment=augment,
                                                 batch_size=batch_size, 
-                                                epochs=epochs)
+                                                epochs=epochs,
+                                                regularization=regularization)
 
 # make directories where the results can be saved if they do not
 # already exist

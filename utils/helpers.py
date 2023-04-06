@@ -4,7 +4,7 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 from keras import layers
-import tensorflow_addons as tfa
+# import tensorflow_addons as tfa
 
 from PIL import Image
 from sklearn.model_selection import train_test_split
@@ -151,22 +151,25 @@ def train_model(model_config: str,
                 augment: bool = False,
                 batch_size: int = 32, 
                 epochs: int = 5, 
-                random_seed: int = 42) -> Tuple[tf.keras.Model, 
-                                                tf.keras.callbacks.History, 
-                                                tf.keras.callbacks.History]:
+                random_seed: int = 42,
+                regularization: bool = False) -> Tuple[tf.keras.Model, 
+                                                 tf.keras.callbacks.History, 
+                                                 tf.keras.callbacks.History]:
     
     '''
         Convenience function for compiling and training the model 
 
         Arguments:
-            model_config: a string indicating the network architecture to be used
-            x_train:      an array containing matrix representations of the training images 
-            y_train:      an array containing the training labels 
-            x_test:       an array containing matrix representations of the test images 
-            y_test:       an array containing the test labels 
-            batch_size:   an int indicating the batch size for model training 
-            epochs:       the number of epochs to train the model 
-            random_seed:  random seed for replicable training results 
+            model_config:   a string indicating the network architecture to be used
+            x_train:        an array containing matrix representations of the training images 
+            y_train:        an array containing the training labels 
+            x_test:         an array containing matrix representations of the test images 
+            y_test:         an array containing the test labels 
+            batch_size:     an int indicating the batch size for model training 
+            epochs:         the number of epochs to train the model 
+            random_seed:    random seed for replicable training results 
+            regularization: if true, L2 regularization will be applied to the last dense layer
+                            when training the model
 
         The function will throw an exception if an invalid model configuration is passed to it.
         Valid configuratinos include:
@@ -238,6 +241,12 @@ def train_model(model_config: str,
 
         model.summary()
 
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(),
+            loss=tf.keras.losses.CategoricalCrossentropy(),
+            metrics=[tf.keras.metrics.CategoricalAccuracy()],
+        )
+
         hist1 = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test))
 
         hist2 = hist1
@@ -280,9 +289,21 @@ def train_model(model_config: str,
         x = data_augmentation(inputs)
     else:
         x = inputs
+
+    # scale inputs where necessary. The scaling procedure
+    # differs depending on the model
+    if model_config == 'Xception':
+        x = tf.keras.applications.xception.preprocess_input(x)
+    elif model_config == 'ResNet50':
+        x = tf.keras.applications.resnet.preprocess_input(x)
+    elif model_config == 'VGG16': 
+        x = tf.keras.applications.vgg16.preprocess_input(x)
     x = pretrained(x, training=False)
     x = tf.keras.layers.Flatten()(x)
-    x = tf.keras.layers.Dense(512, activation='relu')(x)
+    if regularization:
+        x = tf.keras.layers.Dense(512, activation='relu', kernel_regularizer=tf.keras.regularizers.L2(0.01))(x)
+    else:
+        x = tf.keras.layers.Dense(512, activation='relu')(x)
     x = tf.keras.layers.Dropout(0.2, seed=29)(x)
     outputs = tf.keras.layers.Dense(15, activation='softmax')(x)
     model = tf.keras.Model(inputs, outputs)
