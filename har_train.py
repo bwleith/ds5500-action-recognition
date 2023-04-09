@@ -11,12 +11,14 @@ parser.add_argument("--model_config", help = "model configuration", type = str, 
 parser.add_argument("--epochs", help = "number of epochs", type = int, default = 10)
 parser.add_argument("--batch_size", help = "batch size", type = int, default = 128)
 parser.add_argument("--augment", help = "data augmentation", type=bool, default = False)
+parser.add_argument("--regularization", help = "regularization", type=bool, default=False)
 args = parser.parse_args()
 
 model_config = args.model_config
 epochs = args.epochs
 batch_size = args.batch_size
 augment = args.augment
+regularization = args.regularization
 
 # read in the data
 train_df = pd.read_csv('./Training_set.csv')
@@ -33,7 +35,8 @@ model, hist1, hist2 = utils.helpers.train_model(model_config,
                                                 y_test, 
                                                 augment=augment,
                                                 batch_size=batch_size, 
-                                                epochs=epochs)
+                                                epochs=epochs,
+                                                regularization=regularization)
 
 # make directories where the results can be saved if they do not
 # already exist
@@ -47,6 +50,15 @@ except:
     pass
 
 # save the results 
-model.save('./models/'+model_config+'.h5')
+# model.save('./models/'+model_config+'.h5')
 
-utils.helpers.plot_history(hist1, model_config)
+# storing all arguments in a str
+arg_config = model_config + '_epochs_' + str(epochs) + '_batch_size_' + str(batch_size) + '_augment_' + str(augment) + '_regularization_' + str(regularization)
+
+utils.helpers.plot_history(hist1, arg_config)
+
+with open('./visualizations/'+arg_config+'.txt', 'a') as f:
+    f.write('\nThe validation accuracy fine tuned is')
+    f.write(str(hist2.history['val_categorical_accuracy']))
+    f.write('\nThe validation loss fine tuned is')
+    f.write(str(hist2.history['val_loss']))
