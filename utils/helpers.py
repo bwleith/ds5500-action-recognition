@@ -364,3 +364,15 @@ def plot_history(history: tf.keras.callbacks.History,
     
     plt.savefig('./visualizations/'+config+'.png')
     plt.show()
+    
+    # Saving the validation accuracy in a text file in the same folder
+    
+    with open('./visualizations/'+config+'.txt', 'w') as f:
+        f.write('The validation accuracy is')
+        f.write(str(history.history['val_categorical_accuracy']))
+        f.write('\nThe validation loss is')
+        f.write(str(history.history['val_loss']))
+        
+        
+    
+    
