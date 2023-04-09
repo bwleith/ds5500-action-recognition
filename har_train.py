@@ -50,6 +50,15 @@ except:
     pass
 
 # save the results 
-model.save('./models/'+model_config+'.h5')
+# model.save('./models/'+model_config+'.h5')
 
-utils.helpers.plot_history(hist1, model_config)
+# storing all arguments in a str
+arg_config = model_config + '_epochs_' + str(epochs) + '_batch_size_' + str(batch_size) + '_augment_' + str(augment) + '_regularization_' + str(regularization)
+
+utils.helpers.plot_history(hist1, arg_config)
+
+with open('./visualizations/'+arg_config+'.txt', 'a') as f:
+    f.write('\nThe validation accuracy fine tuned is')
+    f.write(str(hist2.history['val_categorical_accuracy']))
+    f.write('\nThe validation loss fine tuned is')
+    f.write(str(hist2.history['val_loss']))
