@@ -151,10 +151,11 @@ def train_model(model_config: str,
                 augment: bool = False,
                 batch_size: int = 32, 
                 epochs: int = 5, 
+                learning_rate: float = 0.00001,
                 random_seed: int = 42,
-                regularization: bool = False) -> Tuple[tf.keras.Model, 
-                                                 tf.keras.callbacks.History, 
-                                                 tf.keras.callbacks.History]:
+                regularization: float = 0) -> Tuple[tf.keras.Model, 
+                                                    tf.keras.callbacks.History, 
+                                                    tf.keras.callbacks.History]:
     
     '''
         Convenience function for compiling and training the model 
@@ -167,8 +168,9 @@ def train_model(model_config: str,
             y_test:         an array containing the test labels 
             batch_size:     an int indicating the batch size for model training 
             epochs:         the number of epochs to train the model 
+            learning_rate:  optional parameter for learning reate
             random_seed:    random seed for replicable training results 
-            regularization: if true, L2 regularization will be applied to the last dense layer
+            regularization: if > 0, L2 regularization with the given penalty will be applied to the last dense layer
                             when training the model
 
         The function will throw an exception if an invalid model configuration is passed to it.
@@ -242,7 +244,7 @@ def train_model(model_config: str,
         model.summary()
 
         model.compile(
-            optimizer=tf.keras.optimizers.Adam(),
+            optimizer=tf.keras.optimizers.Adam(learning_rate),
             loss=tf.keras.losses.CategoricalCrossentropy(),
             metrics=[tf.keras.metrics.CategoricalAccuracy()],
         )
@@ -257,7 +259,7 @@ def train_model(model_config: str,
         model = create_vit_classifier()
 
         model.compile(
-            optimizer=tf.keras.optimizers.Adam(),
+            optimizer=tf.keras.optimizers.Adam(learning_rate),
             loss=tf.keras.losses.CategoricalCrossentropy(),
             metrics=[tf.keras.metrics.CategoricalAccuracy()],
         )
@@ -300,8 +302,8 @@ def train_model(model_config: str,
         x = tf.keras.applications.vgg16.preprocess_input(x)
     x = pretrained(x, training=False)
     x = tf.keras.layers.Flatten()(x)
-    if regularization:
-        x = tf.keras.layers.Dense(512, activation='relu', kernel_regularizer=tf.keras.regularizers.L2(0.01))(x)
+    if regularization > 0:
+        x = tf.keras.layers.Dense(512, activation='relu', kernel_regularizer=tf.keras.regularizers.L2(regularization))(x)
     else:
         x = tf.keras.layers.Dense(512, activation='relu')(x)
     x = tf.keras.layers.Dropout(0.2, seed=29)(x)
@@ -309,7 +311,7 @@ def train_model(model_config: str,
     model = tf.keras.Model(inputs, outputs)
 
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(),
+        optimizer=tf.keras.optimizers.Adam(learning_rate),
         loss=tf.keras.losses.CategoricalCrossentropy(),
         metrics=[tf.keras.metrics.CategoricalAccuracy()],
     )
@@ -321,7 +323,7 @@ def train_model(model_config: str,
     pretrained.trainable = True
     
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(1e-5),
+        optimizer=tf.keras.optimizers.Adam(learning_rate),
         loss=tf.keras.losses.CategoricalCrossentropy(),
         metrics=[tf.keras.metrics.CategoricalAccuracy()],
     )
